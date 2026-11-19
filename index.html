@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Frietsense · A fry line, with and without Polysense</title>
+<meta name="description" content="An interactive concept of a potato fry line run manually, with Polysense Qualify, and with Qualify plus AutoControl, comparing waste and operator effort side by side.">
+<meta name="theme-color" content="#0a2b28">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.frietsense.com/">
+<meta property="og:title" content="Frietsense · A fry line, with and without Polysense">
+<meta property="og:description" content="Interactive concept: the same potato line under manual control, with Qualify, and with Qualify + AutoControl.">
+<meta property="og:image" content="https://www.frietsense.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app closed" id="app">
+  <header class="top">
+    <h1>A fry line, with and without Polysense</h1>
+    <div class="tools">
+      <button class="btn icon primary" id="btn-story" aria-label="Play the story" title="Play the story"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.3v11.4l9-5.7z"/></svg></button>
+      <button class="btn icon" id="btn-run" hidden></button>
+      <div class="modes" role="radiogroup" aria-label="Control mode">
+        <button id="mode-0" role="radio" aria-checked="true">Manual</button>
+        <button id="mode-1" role="radio" aria-checked="false">Qualify</button>
+        <button id="mode-2" role="radio" aria-checked="false">Qualify + AutoControl</button>
+      </div>
+      <button class="btn batch" id="btn-batch">New batch arrives</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="stage" id="stage" aria-label="Animated potato line">
+      <canvas id="gl"></canvas>
+      <div class="fx bt"></div><div class="fx bb"></div><div class="fx vig"></div><div class="fx grain" id="grain"></div>
+      <div class="labels" id="labels"></div>
+      <div class="hud">
+        <div class="clock"><b id="clock">08:00</b><span>plant time, 1 hour in 24 s</span></div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="event" id="event" hidden></div>
+      </div>
+      <div class="zoom" id="zoom">
+        <button class="btn icon" id="z-in" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button>
+        <button class="btn icon" id="z-out" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 8h10"/></svg></button>
+        <button class="btn icon" id="z-home" aria-label="Reset the view" title="Reset the view (0)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8 8 3l5.5 5M4.2 6.8V13h7.6V6.8"/></svg></button>
+      </div>
+      <div class="caption" id="caption"></div>
+      <button class="tab" id="tab" aria-expanded="false" aria-controls="side">Open scoreboard</button>
+      <button class="rope" id="rope" aria-pressed="false" aria-label="Light cord. Pull to switch the factory lights off or on.">
+        <svg width="56" height="200" viewBox="0 0 56 200" aria-hidden="true"><g id="rope-g"><line id="rope-l" x1="28" y1="0" x2="28" y2="96" stroke="var(--rope)" stroke-width="2"/>
+          <g id="rope-h"><circle cx="28" cy="98" r="4" fill="var(--rope-wood)"/><path d="M28 102c7 0 9 10 9 18a9 9 0 0 1-18 0c0-8 2-18 9-18z" fill="var(--rope-wood)"/></g></g></svg>
+        <span class="hint">Pull</span>
+      </button>
+    </section>
+
+    <aside class="side" id="side"><div class="side-in">
+      <section class="card score" id="score">
+        <h2>Scoreboard <span class="tag" id="sb-tag">08:00 to 09:30</span></h2>
+        <table>
+          <thead><tr><th></th><th id="h0">Manual</th><th id="h1">Qualify</th><th id="h2">+ Auto&shy;Control</th></tr></thead>
+          <tbody>
+            <tr><th>Good potato over-peeled</th><td id="over-0"></td><td id="over-1"></td><td id="over-2"></td></tr>
+            <tr><th>Off-spec, peel left on</th><td id="off-0"></td><td id="off-1"></td><td id="off-2"></td></tr>
+            <tr><th>Foreign objects reaching the cutter</th><td id="fm-0"></td><td id="fm-1"></td><td id="fm-2"></td></tr>
+            <tr><th>Operator interventions</th><td id="int-0"></td><td id="int-1"></td><td id="int-2"></td></tr>
+            <tr><th>New batch noticed after</th><td id="det-0"></td><td id="det-1"></td><td id="det-2"></td></tr>
+            <tr><th>Back in spec after</th><td id="cor-0"></td><td id="cor-1"></td><td id="cor-2"></td></tr>
+          </tbody>
+        </table>
+        <p class="note">Illustrative numbers from a toy model at 20 t/h per line. They are not Polysense results. Polysense's own published figure is 45% less peeling time at a European potato processor.</p>
+      </section>
+
+      <section class="card">
+        <h2 id="q-title">What Qualify sees</h2>
+        <div class="blind" id="q-blind">No inline measurement. The next manual sample is at <span id="q-next">09:00</span>.</div>
+        <div id="q-reads" hidden></div>
+        <div class="chartwrap"><canvas id="chart"></canvas></div>
+        <div class="legend"><span><i id="lg-set"></i>Peeler steam time</span><span><i class="need"></i>What the batch needs</span><span id="lg-extra" hidden><i class="l2"></i>Line 2</span></div>
+      </section>
+
+      <p class="credit">Demo concept by Nico.</p>
+    </div></aside>
+  </div>
+</div>
+<script src="vendor/three.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
